@@ -12,6 +12,7 @@ applyTo: "front/**"
 
 ## Angular et TypeScript
 - Créer des composants standalone et déclarer leurs dépendances (`CommonModule`, modules Material, directives et pipes) dans leurs imports, en cohérence avec les composants voisins.
+- Utiliser les blocs de contrôle Angular (`@if`, `@else`, `@for`) plutôt que les directives structurelles obsolètes `*ngIf` et `*ngFor`. Fournir une expression `track` stable à chaque `@for`.
 - Conserver la séparation entre template, styles et composant utilisée dans le dossier concerné.
 - Respecter les conventions d'injection déjà présentes à proximité (`inject()` ou injection par constructeur) ; éviter de mélanger les deux styles dans un même composant.
 - Annoter explicitement le type de retour de chaque méthode et fonction (`void` lorsqu'elle ne retourne rien).
