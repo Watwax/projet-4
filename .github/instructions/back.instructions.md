@@ -24,7 +24,10 @@ applyTo: "back/**"
 - Ne jamais journaliser de mot de passe, de token JWT ou d'autre donnée sensible ; limiter les logs aux informations nécessaires au diagnostic.
 
 ## Tests et commandes
-- Ajouter ou adapter des tests JUnit/Spring pour les comportements modifiés, en isolant la logique métier et en couvrant les cas nominaux et les erreurs.
+- Utiliser **JUnit** (JUnit Jupiter) et **Mockito** pour tester le code Java. Ajouter ou adapter des tests dans `back/src/test/java/`, en suivant la convention `*Test.java` et les exemples existants.
+- Tester les services isolément en mockant leurs repositories et autres dépendances avec Mockito ; vérifier les valeurs de retour, les exceptions et les interactions pertinentes. Tester aussi les cas nominaux, les entrées invalides et les erreurs métier.
+- Pour les tests d’intégration qui valident le câblage Spring ou les échanges HTTP, utiliser les outils de test Spring/JUnit appropriés et réserver les mocks aux dépendances externes au comportement visé. Ne pas démarrer tout le contexte Spring pour un simple test unitaire.
 - Depuis `back/`, lancer `mvn test` pour les tests et `mvn spring-boot:run` pour démarrer l'application.
-- Le démarrage local s'appuie sur Docker Compose pour MySQL ; tenir compte de cette dépendance pour les tests d'intégration et le lancement.
+- Pour cibler une classe, utiliser `mvn -Dtest=UserServiceTest test` en remplaçant le nom par la classe souhaitée.
+- Les tests unitaires qui mockent les repositories ne doivent pas dépendre de MySQL. Les tests d’intégration qui sollicitent la base doivent tenir compte de la configuration de test et de sa dépendance à Docker. Le démarrage local de l’application s’appuie sur Docker Compose pour MySQL.
 - Exécuter les validations adaptées au changement et signaler explicitement celles qui n'ont pas pu être lancées.

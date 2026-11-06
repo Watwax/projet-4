@@ -27,7 +27,10 @@ applyTo: "front/**"
 - Préférer l'`async` pipe dans les templates. Pour tout `subscribe()` dans un composant, lier le cycle de vie de l'abonnement à celui du composant avec `takeUntilDestroyed` et `DestroyRef` (ou un mécanisme de désabonnement équivalent).
 
 ## Tests et commandes
-- Ajouter ou mettre à jour des tests Jest à côté du composant ou service concerné (`*.spec.ts`) ; mocker les dépendances HTTP et Angular selon les tests existants.
-- Utiliser Cypress pour les scénarios de bout en bout lorsque le comportement traverse plusieurs pages ou interactions.
+- Utiliser **Jest** pour les tests unitaires et d’intégration du frontend Angular. Ajouter ou mettre à jour des tests à côté du composant ou service concerné (`*.spec.ts`) ; vérifier le comportement observable, les cas nominaux et les erreurs.
+- Dans les tests Jest, utiliser les utilitaires de test Angular et mocker les dépendances externes. Pour les services HTTP, préférer les outils de test `HttpClient` d’Angular plutôt que de vrais appels réseau. Ne pas utiliser Cypress pour tester une unité isolée.
+- Utiliser **Cypress** pour les tests end-to-end (e2e) qui valident les parcours utilisateur complets et les interactions entre pages. Vérifier le résultat visible et les transitions attendues ; intercepter ou préparer les réponses API lorsque le scénario n’a pas besoin de tester le backend réel.
+- Garder les tests Cypress dans `front/cypress/e2e/` et les tests Jest au format `*.spec.ts`. Ne pas confondre test e2e et test d’intégration Angular : choisir l’outil adapté au niveau testé.
 - Depuis `front/` : `npm run start` pour le développement, `npm test -- --runInBand` pour Jest, `npm run lint` pour le lint et `npm run cypress:run` pour Cypress.
+- Cypress utilise `http://localhost:4200` comme `baseUrl` ; démarrer le frontend avec `npm run start` avant `npm run cypress:run`. Les scénarios qui appellent le backend réel nécessitent également le backend et sa base de données. `npm run cypress:open` ouvre le runner interactif.
 - Exécuter les tests et contrôles adaptés au changement et signaler explicitement ceux qui n'ont pas pu être lancés.
