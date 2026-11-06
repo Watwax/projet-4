@@ -46,3 +46,9 @@ Launching test:
 for following change:
 
 > npm run test:watch
+
+The Jest unit and integration test coverage thresholds are set to 80% for statements, branches, functions, and lines. Generate the coverage reports from `front/` with:
+
+> npm run test:coverage
+
+The HTML report is available at `front/coverage/jest/lcov-report/index.html`; the LCOV data is written to `front/coverage/jest/lcov.info`. Jest fails when any configured global threshold is not met.
