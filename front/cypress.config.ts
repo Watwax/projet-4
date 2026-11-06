@@ -6,11 +6,12 @@ export default defineConfig({
   fixturesFolder: 'cypress/fixtures',
   video: false,
   e2e: {
-    // We've imported your old cypress plugins here.
-    // You may want to clean this up later by importing these.
-    setupNodeEvents(on: Cypress.PluginEvents, config: Cypress.PluginConfigOptions): void {
+    setupNodeEvents(on: Cypress.PluginEvents, config: Cypress.PluginConfigOptions): Cypress.PluginConfigOptions {
       return require('./cypress/plugins/index.ts').default(on, config)
     },
     baseUrl: 'http://localhost:4200',
+  },
+  env: {
+    realApi: false,
   },
 })
