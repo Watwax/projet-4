@@ -1,23 +1,25 @@
+import type { Provider } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
 type CompilerOptions = Partial<{
-  providers: any[];
+  providers: Provider[];
   useJit: boolean;
   preserveWhitespaces: boolean;
 }>;
 export type ConfigureFn = (testBed: typeof TestBed) => void;
 
-export const configureTests = (configure: ConfigureFn, compilerOptions: CompilerOptions = {}) => {
+export const configureTests = (
+  configure: ConfigureFn,
+  compilerOptions: CompilerOptions = {}
+): Promise<void> => {
   const compilerConfig: CompilerOptions = {
     preserveWhitespaces: false,
     ...compilerOptions,
   };
 
-  const configuredTestBed = TestBed.configureCompiler(compilerConfig);
+  TestBed.configureCompiler(compilerConfig);
 
-  // @ts-ignore
-  configure(configuredTestBed);
+  configure(TestBed);
 
-  // @ts-ignore
-  return configuredTestBed.compileComponents().then(() => configuredTestBed);
+  return TestBed.compileComponents();
 };

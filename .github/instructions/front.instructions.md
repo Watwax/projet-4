@@ -14,7 +14,8 @@ applyTo: "front/**"
 - Créer des composants standalone et déclarer leurs dépendances (`CommonModule`, modules Material, directives et pipes) dans leurs imports, en cohérence avec les composants voisins.
 - Conserver la séparation entre template, styles et composant utilisée dans le dossier concerné.
 - Respecter les conventions d'injection déjà présentes à proximité (`inject()` ou injection par constructeur) ; éviter de mélanger les deux styles dans un même composant.
-- Décrire les réponses et requêtes avec les interfaces de `core/models/`. Éviter `any` et garder des types HTTP cohérents avec l'API.
+- Annoter explicitement le type de retour de chaque méthode et fonction (`void` lorsqu'elle ne retourne rien).
+- Décrire les réponses et requêtes avec des types précis et les interfaces de `core/models/`. Ne jamais utiliser `any`, y compris dans les callbacks, services et helpers de test ; préférer un type concret ou `unknown`.
 - Utiliser les APIs Angular Router pour les navigations et paramètres d'URL, et centraliser les appels HTTP dans les services existants plutôt que dans les composants.
 - Pour les nouvelles fonctionnalités, réutiliser Angular Material et les composants partagés existants avant d'ajouter un nouveau composant ou module.
 
@@ -22,6 +23,7 @@ applyTo: "front/**"
 - Les services communiquent avec l'API via `HttpClient` et RxJS. Réutiliser les services existants pour les sessions, enseignants, utilisateurs et l'authentification.
 - Préserver les routes et le format des endpoints consommés par le backend. Vérifier également l'impact sur `customJwtInterceptorFn`, les guards et l'état de session avant de modifier le flux d'authentification.
 - Ne jamais stocker ni afficher de secrets dans le code ou les journaux ; ne pas contourner les guards ou l'intercepteur pour simplifier un appel.
+- Préférer l'`async` pipe dans les templates. Pour tout `subscribe()` dans un composant, lier le cycle de vie de l'abonnement à celui du composant avec `takeUntilDestroyed` et `DestroyRef` (ou un mécanisme de désabonnement équivalent).
 
 ## Tests et commandes
 - Ajouter ou mettre à jour des tests Jest à côté du composant ou service concerné (`*.spec.ts`) ; mocker les dépendances HTTP et Angular selon les tests existants.

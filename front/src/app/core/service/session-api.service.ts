@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Session } from '../models/session.interface';
+import { SessionRequest } from '../models/sessionRequest.interface';
 
 @Injectable({
   providedIn: 'root'
@@ -21,15 +22,15 @@ export class SessionApiService {
     return this.httpClient.get<Session>(`${this.pathService}/${id}`);
   }
 
-  public delete(id: string): Observable<any> {
-    return this.httpClient.delete(`${this.pathService}/${id}`);
+  public delete(id: string): Observable<void> {
+    return this.httpClient.delete<void>(`${this.pathService}/${id}`);
   }
 
-  public create(session: Session): Observable<Session> {
+  public create(session: SessionRequest): Observable<Session> {
     return this.httpClient.post<Session>(this.pathService, session);
   }
 
-  public update(id: string, session: Session): Observable<Session> {
+  public update(id: string, session: SessionRequest): Observable<Session> {
     return this.httpClient.put<Session>(`${this.pathService}/${id}`, session);
   }
 
