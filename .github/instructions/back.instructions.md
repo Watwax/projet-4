@@ -26,8 +26,11 @@ applyTo: "back/**"
 ## Tests et commandes
 - Utiliser **JUnit** (JUnit Jupiter) et **Mockito** pour tester le code Java. Ajouter ou adapter des tests dans `back/src/test/java/`, en suivant la convention `*Test.java` et les exemples existants.
 - Tester les services isolément en mockant leurs repositories et autres dépendances avec Mockito ; vérifier les valeurs de retour, les exceptions et les interactions pertinentes. Tester aussi les cas nominaux, les entrées invalides et les erreurs métier.
-- Pour les tests d’intégration qui valident le câblage Spring ou les échanges HTTP, utiliser les outils de test Spring/JUnit appropriés et réserver les mocks aux dépendances externes au comportement visé. Ne pas démarrer tout le contexte Spring pour un simple test unitaire.
+- Faire correspondre chaque test à un cas précis du plan de testing ; éviter de regrouper plusieurs comportements indépendants dans un même test.
+- Pour les tests d’intégration de l’API, utiliser **Spring Boot Test** (par exemple `@SpringBootTest` et `@AutoConfigureMockMvc`) afin de vérifier le câblage Spring et les échanges HTTP réels. Réserver les mocks aux dépendances externes au comportement visé ; ne pas démarrer tout le contexte Spring pour un simple test unitaire.
+- Veiller à ce que les tests d’intégration représentent au moins 30 % de la suite backend.
+- Ne pas écrire de tests pour les packages contenant du code de type DTO, notamment `dto` et `payload` ; les exclure aussi des rapports de couverture.
 - Depuis `back/`, lancer `mvn test` pour les tests et `mvn spring-boot:run` pour démarrer l'application.
 - Pour cibler une classe, utiliser `mvn -Dtest=UserServiceTest test` en remplaçant le nom par la classe souhaitée.
-- Les tests unitaires qui mockent les repositories ne doivent pas dépendre de MySQL. Les tests d’intégration qui sollicitent la base doivent tenir compte de la configuration de test et de sa dépendance à Docker. Le démarrage local de l’application s’appuie sur Docker Compose pour MySQL.
+- Les tests unitaires qui mockent les repositories ne doivent pas dépendre de MySQL. Les tests d’intégration qui sollicitent la base doivent utiliser la configuration de test prévue (H2 en mémoire) et ne pas nécessiter Docker Compose. Le démarrage local de l’application s’appuie sur Docker Compose pour MySQL.
 - Exécuter les validations adaptées au changement et signaler explicitement celles qui n'ont pas pu être lancées.

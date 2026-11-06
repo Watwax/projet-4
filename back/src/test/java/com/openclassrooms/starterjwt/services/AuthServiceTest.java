@@ -21,11 +21,13 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 class AuthServiceTest {
     private AuthenticationManager authenticationManager;
@@ -100,5 +102,50 @@ class AuthServiceTest {
         assertEquals("jwt-token", response.getToken());
         assertEquals("admin@example.com", response.getUsername());
         assertTrue(response.getAdmin());
+    }
+
+    @Test
+    void shouldDefaultToRegularUserWhenEmailLookupReturnsNoUser() {
+        LoginRequest request = new LoginRequest();
+        request.setEmail("user@example.com");
+        request.setPassword("secret123");
+        UserDetailsImpl userDetails = UserDetailsImpl.builder()
+                .id(2L)
+                .username("user@example.com")
+                .firstName("Jane")
+                .lastName("Doe")
+                .build();
+        Authentication authentication = mock(Authentication.class);
+        when(this.authenticationManager.authenticate(any(Authentication.class))).thenReturn(authentication);
+        when(authentication.getPrincipal()).thenReturn(userDetails);
+        when(this.jwtUtils.generateJwtToken(authentication)).thenReturn("jwt-token");
+        when(this.userRepository.findByEmail("user@example.com")).thenReturn(Optional.empty());
+
+        JwtResponse response = this.authService.authenticateUser(request);
+
+        assertFalse(response.getAdmin());
+        assertEquals("jwt-token", response.getToken());
+        assertEquals(authentication, SecurityContextHolder.getContext().getAuthentication());
+    }
+
+    @Test
+    void shouldEncodeAndSaveNewUserAsNonAdmin() {
+        SignupRequest request = new SignupRequest();
+        request.setEmail("new@example.com");
+        request.setFirstName("Jane");
+        request.setLastName("Doe");
+        request.setPassword("secret123");
+        when(this.userRepository.existsByEmail("new@example.com")).thenReturn(false);
+        when(this.passwordEncoder.encode("secret123")).thenReturn("encoded-password");
+
+        assertTrue(this.authService.registerUser(request));
+
+        ArgumentCaptor<User> savedUser = ArgumentCaptor.forClass(User.class);
+        verify(this.userRepository).save(savedUser.capture());
+        assertEquals("new@example.com", savedUser.getValue().getEmail());
+        assertEquals("Jane", savedUser.getValue().getFirstName());
+        assertEquals("Doe", savedUser.getValue().getLastName());
+        assertEquals("encoded-password", savedUser.getValue().getPassword());
+        assertFalse(savedUser.getValue().isAdmin());
     }
 }

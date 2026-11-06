@@ -120,6 +120,28 @@ La capture d'écran ci-dessous résume les étapes précédentes :
 
 ![2-docker-desktop-bdd](pictures/2-docker-desktop-bdd.png)
 
+## Tests backend
+
+Les tests unitaires utilisent JUnit et Mockito pour vérifier les services et composants isolément. Les tests d'intégration utilisent Spring Boot Test, MockMvc et une base H2 en mémoire pour valider l'API sans démarrer MySQL ni Docker Compose.
+
+Chaque test doit couvrir un cas précis du plan de testing. Les tests d'intégration de l'API démarrent le contexte avec Spring Boot Test et valident les échanges HTTP via MockMvc ; les dépendances internes au comportement testé ne sont pas mockées. Les packages contenant les DTO (`dto` et `payload`) ne sont pas testés et sont exclus de la couverture.
+
+Depuis le dossier `back`, lancer toute la suite et vérifier les seuils de couverture :
+
+```bash
+mvn verify
+```
+
+Le build vérifie un minimum de 80 % pour les instructions, branches, lignes et méthodes. Les packages `dto` et `payload` sont exclus de la mesure. Le rapport JaCoCo HTML est généré dans `target/site/jacoco/index.html`.
+
+Pour exécuter une classe de tests ciblée :
+
+```bash
+mvn -Dtest=SessionServiceTest test
+```
+
+Les tests d'intégration doivent représenter au moins 30 % de la suite backend ; cette proportion est vérifiée sur l'ensemble des tests lors de l'ajout de scénarios.
+
 
 ## Ressources
 

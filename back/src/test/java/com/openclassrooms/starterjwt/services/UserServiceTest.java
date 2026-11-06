@@ -10,6 +10,8 @@ import org.junit.jupiter.api.Test;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -52,5 +54,21 @@ class UserServiceTest {
         assertThrows(NotFoundException.class, () -> this.userService.delete(1L, "user@example.com"));
 
         verify(this.userRepository, never()).deleteById(1L);
+    }
+
+    @Test
+    void shouldFindUserById() {
+        User user = new User("user@example.com", "Doe", "Jane", "password", false);
+        when(this.userRepository.findById(1L)).thenReturn(Optional.of(user));
+
+        assertSame(user, this.userService.findById(1L));
+        assertSame(user, this.userService.getById(1L));
+    }
+
+    @Test
+    void shouldReturnNullFromFindByIdWhenUserDoesNotExist() {
+        when(this.userRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertNull(this.userService.findById(1L));
     }
 }
