@@ -201,6 +201,13 @@ class ApiIntegrationTest {
     }
 
     @Test
+    void shouldReturnNotFoundWhenSessionDoesNotExist() throws Exception {
+        this.mockMvc.perform(get("/api/session/99999")
+                        .header("Authorization", this.bearerToken))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void shouldRejectSessionWithInvalidRequiredFields() throws Exception {
         this.mockMvc.perform(post("/api/session")
                         .header("Authorization", this.bearerToken)
