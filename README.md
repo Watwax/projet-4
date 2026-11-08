@@ -11,26 +11,41 @@ Application de gestion de séances de yoga composée d’une API REST Spring Boo
 
 - Node.js 18.19 ou supérieur et npm (Angular CLI 19 requiert au minimum Node.js 18.19).
 - JDK 21 et Maven 3.9 ou supérieur.
-- Docker avec Docker Compose pour démarrer l’API avec MySQL.
+- Docker avec Docker Compose, démarré avant le backend.
+- Les ports 3306 (MySQL), 8080 (API) et 4200 (frontend) disponibles.
 
 ## Installation et démarrage
 
-### Backend
+### Récupérer le projet
 
-Depuis `back/`, configurez les variables d’environnement utilisées par `application.yml` et `compose.yaml` (`DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`, `DB_NAME` et `TOKEN_SECRET`). Gardez les valeurs sensibles dans votre environnement local et ne les publiez pas.
+Clonez le dépôt puis placez-vous dans son dossier :
 
-Puis lancez l’API :
+```bash
+git clone https://github.com/Watwax/projet-4.git
+cd projet-4
+```
+
+### 1. Démarrer le backend et sa base MySQL
+
+Ouvrez un terminal à la racine du dépôt, puis placez-vous dans `back/` :
 
 ```bash
 cd back
+```
+
+Le backend lit les variables `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`, `DB_NAME` et `TOKEN_SECRET`. Vérifiez que le fichier `.env` du dossier `back/` contient les valeurs adaptées à votre environnement. Démarrer le backend :
+
+```bash
 mvn spring-boot:run
 ```
 
-Le backend est disponible sur `http://localhost:8080`. Le démarrage local utilise Docker Compose pour MySQL.
+Spring Boot démarre automatiquement le conteneur MySQL défini dans `back/compose.yaml`, puis lance l’API sur `http://localhost:8080`. Gardez ce terminal ouvert pendant l’utilisation de l’application.
 
-### Frontend
+La base est créée au démarrage, mais aucun compte administrateur n’est inséré automatiquement. Pour créer le compte de démonstration, exécutez le script [`insert_user.sql`](./back/src/main/resources/sql/insert_user.sql) une seule fois après le démarrage de MySQL ; les identifiants de ce compte sont documentés dans le [README du backend](./back/README.md).
 
-Dans un autre terminal :
+### 2. Installer et lancer le frontend
+
+Ouvrez un second terminal à la racine du dépôt :
 
 ```bash
 cd front
@@ -38,7 +53,11 @@ npm install
 npm run start
 ```
 
-L’application est disponible sur `http://localhost:4200`.
+`npm install` est nécessaire lors de la première installation (et après une modification des dépendances). Le serveur Angular démarre sur `http://localhost:4200` ; ouvrez cette adresse dans votre navigateur.
+
+Le proxy Angular transmet les requêtes `/api` au backend sur `http://localhost:8080`. Pour que les fonctionnalités utilisant l’API marchent, démarrez donc le backend avant le frontend et laissez les deux terminaux ouverts.
+
+Pour arrêter les serveurs, utilisez `Ctrl+C` dans chacun des terminaux.
 
 ## Tests
 
