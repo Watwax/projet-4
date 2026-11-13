@@ -118,3 +118,17 @@ CYPRESS_realApi=true npm run cypress:run
 ```
 
 Ce scénario vérifie l’inscription, l’authentification, le chargement de données protégées et la suppression du compte créé pour le test.
+
+## Coverage
+
+### Back
+
+![Coverage back](img-coverage/image.png)
+
+### Front
+
+![Coverage front](img-coverage/image-1.png)
+
+### E2E
+
+![Coverage e2e](img-coverage/image-2.png)
