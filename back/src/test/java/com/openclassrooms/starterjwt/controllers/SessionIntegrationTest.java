@@ -1,13 +1,15 @@
 package com.openclassrooms.starterjwt.controllers;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.openclassrooms.starterjwt.models.Session;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MvcResult;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -18,35 +20,35 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class SessionIntegrationTest extends ApiIntegrationTestSupport {
 
     @Test
-    void shouldCreateListAndFindSessionsThroughAuthenticatedEndpoints() throws Exception {
-        Map<String, Object> sessionRequest = this.sessionRequest("Morning yoga", this.teacher.getId());
-        MvcResult createResult = this.mockMvc.perform(post("/api/session")
+    void shouldCreateSessionThroughAuthenticatedEndpoint() throws Exception {
+        Map<String, Object> request = this.sessionRequest("Morning yoga", this.teacher.getId());
+
+        this.mockMvc.perform(post("/api/session")
                         .header("Authorization", this.bearerToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(this.objectMapper.writeValueAsString(sessionRequest)))
+                        .content(this.objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Morning yoga"))
-                .andExpect(jsonPath("$.teacher_id").value(this.teacher.getId()))
-                .andReturn();
-
-        JsonNode created = this.objectMapper.readTree(createResult.getResponse().getContentAsString());
-        long sessionId = created.get("id").asLong();
-
-        this.mockMvc.perform(get("/api/session/{id}", sessionId)
-                        .header("Authorization", this.bearerToken))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.description").value("A useful integration-test session"));
-
-        this.mockMvc.perform(get("/api/session").header("Authorization", this.bearerToken))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(sessionId));
+                .andExpect(jsonPath("$.teacher_id").value(this.teacher.getId()));
     }
 
     @Test
-    void shouldReturnNotFoundWhenSessionDoesNotExist() throws Exception {
-        this.mockMvc.perform(get("/api/session/99999")
+    void shouldFindSessionById() throws Exception {
+        Session session = this.saveSession("Morning yoga");
+
+        this.mockMvc.perform(get("/api/session/{id}", session.getId())
                         .header("Authorization", this.bearerToken))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.description").value("A useful integration-test session"));
+    }
+
+    @Test
+    void shouldListSessions() throws Exception {
+        Session session = this.saveSession("Morning yoga");
+
+        this.mockMvc.perform(get("/api/session").header("Authorization", this.bearerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(session.getId()));
     }
 
     @Test
@@ -63,42 +65,73 @@ class SessionIntegrationTest extends ApiIntegrationTestSupport {
     }
 
     @Test
-    void shouldUpdateAndDeleteSessionThroughAuthenticatedEndpoints() throws Exception {
+    void shouldUpdateSession() throws Exception {
         Session session = this.saveSession("Original name");
-        Map<String, Object> updatedRequest = this.sessionRequest("Updated name", this.teacher.getId());
+        Map<String, Object> request = this.sessionRequest("Updated name", this.teacher.getId());
 
         this.mockMvc.perform(put("/api/session/{id}", session.getId())
                         .header("Authorization", this.bearerToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(this.objectMapper.writeValueAsString(updatedRequest)))
+                        .content(this.objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(session.getId()))
                 .andExpect(jsonPath("$.name").value("Updated name"));
+    }
+
+    @Test
+    void shouldDeleteSession() throws Exception {
+        Session session = this.saveSession("Session to delete");
 
         this.mockMvc.perform(delete("/api/session/{id}", session.getId())
                         .header("Authorization", this.bearerToken))
                 .andExpect(status().isOk());
 
-        this.mockMvc.perform(get("/api/session/{id}", session.getId())
+        assertFalse(this.sessionRepository.existsById(session.getId()));
+    }
+
+    @Test
+    void shouldReturnNotFoundWhenSessionDoesNotExist() throws Exception {
+        this.mockMvc.perform(get("/api/session/99999")
                         .header("Authorization", this.bearerToken))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    void shouldAddAndRemoveSessionParticipantAndRejectDuplicateChanges() throws Exception {
+    void shouldAddSessionParticipant() throws Exception {
         Session session = this.saveSession("Participation session");
-        String participationUrl = "/api/session/" + session.getId() + "/participate/" + this.member.getId();
+        String participationUrl = this.participationUrl(session);
 
         this.mockMvc.perform(post(participationUrl).header("Authorization", this.bearerToken))
                 .andExpect(status().isOk());
 
-        this.mockMvc.perform(post(participationUrl).header("Authorization", this.bearerToken))
+        assertTrue(this.sessionRepository.findById(session.getId()).orElseThrow()
+                .getUsers().stream().anyMatch(user -> user.getId().equals(this.member.getId())));
+    }
+
+    @Test
+    void shouldRejectDuplicateSessionParticipation() throws Exception {
+        Session session = this.saveSessionWithMember("Already participating");
+
+        this.mockMvc.perform(post(this.participationUrl(session)).header("Authorization", this.bearerToken))
                 .andExpect(status().isBadRequest());
+    }
 
-        this.mockMvc.perform(delete(participationUrl).header("Authorization", this.bearerToken))
+    @Test
+    void shouldRemoveSessionParticipant() throws Exception {
+        Session session = this.saveSessionWithMember("Participation to remove");
+
+        this.mockMvc.perform(delete(this.participationUrl(session)).header("Authorization", this.bearerToken))
                 .andExpect(status().isOk());
 
-        this.mockMvc.perform(delete(participationUrl).header("Authorization", this.bearerToken))
+        assertFalse(this.sessionRepository.findById(session.getId()).orElseThrow()
+                .getUsers().stream().anyMatch(user -> user.getId().equals(this.member.getId())));
+    }
+
+    @Test
+    void shouldRejectRemovingNonParticipatingUser() throws Exception {
+        Session session = this.saveSession("No participants");
+
+        this.mockMvc.perform(delete(this.participationUrl(session)).header("Authorization", this.bearerToken))
                 .andExpect(status().isBadRequest());
     }
 
@@ -107,5 +140,15 @@ class SessionIntegrationTest extends ApiIntegrationTestSupport {
         this.mockMvc.perform(get("/api/session/not-a-number")
                         .header("Authorization", this.bearerToken))
                 .andExpect(status().isBadRequest());
+    }
+
+    private Session saveSessionWithMember(String name) {
+        Session session = this.saveSession(name);
+        session.setUsers(new ArrayList<>(List.of(this.member)));
+        return this.sessionRepository.save(session);
+    }
+
+    private String participationUrl(Session session) {
+        return "/api/session/" + session.getId() + "/participate/" + this.member.getId();
     }
 }

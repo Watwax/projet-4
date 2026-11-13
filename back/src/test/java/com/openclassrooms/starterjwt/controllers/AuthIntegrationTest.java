@@ -12,33 +12,39 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class AuthIntegrationTest extends ApiIntegrationTestSupport {
 
     @Test
-    void shouldRegisterAndLoginThroughPublicAuthenticationEndpoints() throws Exception {
-        Map<String, String> signup = Map.of(
-                "email", "new-member@example.test",
-                "firstName", "Jamie",
-                "lastName", "Tester",
-                "password", "new-password");
+    void shouldRegisterUserThroughPublicAuthenticationEndpoint() throws Exception {
+        Map<String, String> signup = signupRequest(
+                "new-member@example.test", "Jamie", "Tester", "new-password");
 
         this.mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(signup)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("User registered successfully!"));
+    }
+
+    @Test
+    void shouldRejectRegistrationWhenEmailAlreadyExists() throws Exception {
+        Map<String, String> signup = signupRequest(
+                MEMBER_EMAIL, "Alex", "Member", PASSWORD);
 
         this.mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(signup)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Error: Email is already taken!"));
+    }
 
+    @Test
+    void shouldLoginThroughPublicAuthenticationEndpoint() throws Exception {
         this.mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(this.objectMapper.writeValueAsString(Map.of(
-                                "email", signup.get("email"),
-                                "password", signup.get("password")))))
+                                "email", MEMBER_EMAIL,
+                                "password", PASSWORD))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").isNotEmpty())
-                .andExpect(jsonPath("$.username").value(signup.get("email")))
+                .andExpect(jsonPath("$.username").value(MEMBER_EMAIL))
                 .andExpect(jsonPath("$.admin").value(false));
     }
 
@@ -52,5 +58,14 @@ class AuthIntegrationTest extends ApiIntegrationTestSupport {
                                 "lastName", "Member",
                                 "password", "short"))))
                 .andExpect(status().isBadRequest());
+    }
+
+    private Map<String, String> signupRequest(
+            String email, String firstName, String lastName, String password) {
+        return Map.of(
+                "email", email,
+                "firstName", firstName,
+                "lastName", lastName,
+                "password", password);
     }
 }

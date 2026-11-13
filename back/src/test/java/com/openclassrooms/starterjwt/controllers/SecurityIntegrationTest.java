@@ -11,7 +11,10 @@ class SecurityIntegrationTest extends ApiIntegrationTestSupport {
     void shouldRequireAuthenticationForProtectedEndpoints() throws Exception {
         this.mockMvc.perform(get("/api/teacher"))
                 .andExpect(status().isUnauthorized());
+    }
 
+    @Test
+    void shouldRejectInvalidBearerToken() throws Exception {
         this.mockMvc.perform(get("/api/teacher")
                         .header("Authorization", "Bearer invalid-token"))
                 .andExpect(status().isUnauthorized());

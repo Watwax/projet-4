@@ -1,6 +1,5 @@
 package com.openclassrooms.starterjwt.controllers;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.openclassrooms.starterjwt.mapper.SessionMapper;
 import com.openclassrooms.starterjwt.mapper.TeacherMapper;
@@ -11,22 +10,20 @@ import com.openclassrooms.starterjwt.models.User;
 import com.openclassrooms.starterjwt.repository.SessionRepository;
 import com.openclassrooms.starterjwt.repository.TeacherRepository;
 import com.openclassrooms.starterjwt.repository.UserRepository;
+import com.openclassrooms.starterjwt.security.jwt.JwtUtils;
+import com.openclassrooms.starterjwt.security.services.UserDetailsImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(properties = {
         "spring.docker.compose.enabled=false",
@@ -55,6 +52,9 @@ abstract class ApiIntegrationTestSupport {
     protected PasswordEncoder passwordEncoder;
 
     @Autowired
+    protected JwtUtils jwtUtils;
+
+    @Autowired
     protected TeacherRepository teacherRepository;
 
     @Autowired
@@ -77,7 +77,7 @@ abstract class ApiIntegrationTestSupport {
     protected String bearerToken;
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         this.sessionRepository.deleteAll();
         this.userRepository.deleteAll();
         this.teacherRepository.deleteAll();
@@ -91,20 +91,15 @@ abstract class ApiIntegrationTestSupport {
                 "Alex",
                 this.passwordEncoder.encode(PASSWORD),
                 false));
-        this.bearerToken = this.login(MEMBER_EMAIL, PASSWORD);
-    }
-
-    protected String login(String email, String password) throws Exception {
-        MvcResult result = this.mockMvc.perform(post("/api/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(this.objectMapper.writeValueAsString(Map.of(
-                                "email", email,
-                                "password", password))))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        JsonNode response = this.objectMapper.readTree(result.getResponse().getContentAsString());
-        return "Bearer " + response.get("token").asText();
+        UserDetailsImpl userDetails = UserDetailsImpl.builder()
+                .id(this.member.getId())
+                .username(MEMBER_EMAIL)
+                .firstName(this.member.getFirstName())
+                .lastName(this.member.getLastName())
+                .admin(false)
+                .build();
+        this.bearerToken = "Bearer " + this.jwtUtils.generateJwtToken(
+                new UsernamePasswordAuthenticationToken(userDetails, null));
     }
 
     protected Map<String, Object> sessionRequest(String name, Long teacherId) {
