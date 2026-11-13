@@ -4,12 +4,12 @@
 // IDE or Text Editor.
 // ***********************************************
 // declare namespace Cypress {
-//   interface Chainable<Subject = any> {
-//     customCommand(param: any): typeof customCommand;
+//   interface Chainable<Subject = unknown> {
+//     customCommand(param: unknown): typeof customCommand;
 //   }
 // }
 //
-// function customCommand(param: any): void {
+// function customCommand(param: unknown): void {
 //   console.warn(param);
 // }
 //
